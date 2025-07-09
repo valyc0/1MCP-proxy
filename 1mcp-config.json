@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "postgres-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:postgres@localhost:5432/mydb"
+      ],
+      "tags": ["database", "postgres"],
+      "disabled": false
+    },
+    "filesystem-server": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace/db-ready"],
+      "tags": ["filesystem", "files"],
+      "disabled": false
+    },
+    "memory-server": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "tags": ["memory", "storage"],
+      "disabled": true
+    }
+  }
+}
