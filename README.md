@@ -4,17 +4,24 @@ Questo documento fornisce istruzioni dettagliate su come compilare e avviare l'a
 
 ## Script Disponibili
 
-Questa directory contiene tre script principali:
+Questa directory contiene sei script principali:
 
 1. `compile.sh` - Script per clonare il repository e compilare il codice
 2. `start-stdio.sh` - Script per avviare l'agente in modalità stdio
 3. `start-sse.sh` - Script per avviare l'agente in modalità SSE (Server-Sent Events)
+4. `docker-script/build.sh` - Script wrapper che builda e avvia l'agente come container Docker
+5. `docker-script/build-image.sh` - Script per buildare l'immagine Docker dell'agente
+6. `docker-script/run-container.sh` - Script per avviare l'agente come container Docker
 
 ## Struttura delle Directory
 
 ```
 1MCP-proxy/
 ├── agent/                  # Repository clonato con codice compilato
+├── docker-script/          # Script per Docker build e run
+│   ├── build.sh            # Script wrapper per buildare e avviare container Docker
+│   ├── build-image.sh      # Script per buildare solo l'immagine Docker
+│   └── run-container.sh    # Script per avviare solo il container Docker
 ├── 1mcp-config.json        # File di configurazione dell'agente
 ├── compile.sh              # Script di compilazione
 ├── start-stdio.sh          # Script per avvio in modalità stdio
@@ -56,6 +63,59 @@ Per avviare l'agente utilizzando la comunicazione SSE (Server-Sent Events):
 ```
 
 La modalità SSE è preferibile quando l'agente deve inviare aggiornamenti in tempo reale a client web.
+
+### 4. Utilizzo con Docker
+
+Ci sono tre script per gestire l'agente con Docker:
+
+#### Script wrapper (build e run insieme)
+
+```bash
+./docker-script/build.sh [PORT] [CONFIG_PATH] [IMAGE_NAME] [CONTAINER_NAME]
+```
+
+Questo script esegue in sequenza `build-image.sh` e `run-container.sh` con i parametri forniti.
+
+#### Solo build dell'immagine Docker
+
+```bash
+./docker-script/build-image.sh [IMAGE_NAME]
+```
+
+Parametri (opzionali):
+- `IMAGE_NAME`: Nome dell'immagine Docker (default: ghcr.io/1mcp-app/agent)
+
+Questo script:
+- Verifica se la directory agent esiste e, se necessario, clona il repository
+- Builda l'immagine Docker dall'agent
+
+#### Solo run del container Docker
+
+```bash
+./docker-script/run-container.sh [PORT] [CONFIG_PATH] [IMAGE_NAME] [CONTAINER_NAME]
+```
+
+Parametri (tutti opzionali):
+- `PORT`: Porta su cui il container esporrà il servizio (default: 3051)
+- `CONFIG_PATH`: Percorso al file di configurazione locale (default: /config/1mcp-config.json)
+- `IMAGE_NAME`: Nome dell'immagine Docker (default: ghcr.io/1mcp-app/agent)
+- `CONTAINER_NAME`: Nome del container (default: 1mcp-agent)
+
+Questo script:
+- Rimuove eventuali container esistenti con lo stesso nome
+- Avvia un nuovo container con le variabili d'ambiente configurate
+- Monta il file di configurazione locale nel container
+
+Esempio di uso completo:
+```bash
+./docker-script/build.sh 3052 /path/to/my-config.json my-1mcp-image my-1mcp-container
+```
+
+Esempio di build separata e poi run:
+```bash
+./docker-script/build-image.sh my-custom-image
+./docker-script/run-container.sh 3053 /path/to/config.json my-custom-image my-container
+```
 
 ## File di Configurazione
 
