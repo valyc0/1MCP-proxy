@@ -23,11 +23,14 @@ fi
 
 echo "Running Docker container: $CONTAINER_NAME"
 
+# Get the absolute path of the config file directory from the host
+HOST_CONFIG_DIR=$(dirname "$(realpath "$CONFIG_PATH")")
+
 # Run the Docker container with the specified environment variables
 docker run -d \
     --name $CONTAINER_NAME \
     -p $PORT:$PORT \
-    -v $(dirname "$CONFIG_PATH"):"/config" \
+    -v "$HOST_CONFIG_DIR":"/config" \
     -e ONE_MCP_TRANSPORT="http" \
     -e ONE_MCP_PORT="$PORT" \
     -e ONE_MCP_HOST="$DEFAULT_HOST" \
