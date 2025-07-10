@@ -2,6 +2,18 @@
 
 Questo documento fornisce istruzioni dettagliate su come compilare e avviare l'agente 1MCP utilizzando gli script forniti.
 
+## Indice
+
+- [Script Disponibili](#script-disponibili)
+- [Struttura delle Directory](#struttura-delle-directory)
+- [Istruzioni di Utilizzo](#istruzioni-di-utilizzo)
+- [File di Configurazione](#file-di-configurazione)
+- [Risoluzione dei Problemi](#risoluzione-dei-problemi)
+- [Risorse Aggiuntive](#risorse-aggiuntive)
+- [Autenticazione e Token](#autenticazione-e-token)
+- [Sviluppo e Debug](#sviluppo-e-debug)
+- [Monitoraggio MCP con Inspector](#monitoraggio-mcp-con-inspector)
+
 ## Script Disponibili
 
 Questa directory contiene sei script principali:
@@ -258,6 +270,55 @@ Quando utilizzi la modalità stdio, tipicamente non hai bisogno di avviare manua
 - `--session-storage-path`: Percorso personalizzato per l'archiviazione della sessione (stringa, default: undefined)
 - `--help, -h`: Mostra aiuto
 
+## Autenticazione e Token
+
+### Generazione del Token
+
+Quando abiliti l'autenticazione con il flag `--auth`, 1MCP Agent genera automaticamente un token di accesso che verrà mostrato nell'output del server:
+
+```bash
+# Avvio con autenticazione abilitata
+npx -y @1mcp/agent --auth --config /workspace/db-ready/1mcp-config.json
+
+# Output esempio:
+# Server started on http://localhost:3050
+# Authentication enabled
+# Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Utilizzo del Token
+
+Il token generato deve essere utilizzato dai client per autenticarsi al server. Configura il tuo client (come VS Code) nel seguente modo:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "1mcp-agent": {
+        "url": "http://localhost:3050/sse",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      }
+    }
+  }
+}
+```
+
+### Configurazione della Sessione
+
+Puoi personalizzare le impostazioni di autenticazione:
+
+```bash
+# Impostare un TTL personalizzato per la sessione (in minuti)
+npx -y @1mcp/agent --auth --session-ttl 60
+
+# Specificare un percorso personalizzato per l'archiviazione della sessione
+npx -y @1mcp/agent --auth --session-storage-path /path/to/sessions
+```
+
+**Importante**: Conserva il token generato in modo sicuro poiché sarà necessario per tutte le comunicazioni con il server autenticato.
+
 ## File di Configurazione 1mcp-config.json
 
 Il file `/workspace/db-ready/1mcp-config.json` è un esempio di configurazione per 1MCP Agent. Ecco come è strutturato:
@@ -343,6 +404,23 @@ pnpm inspector
 ```
 
 L'Inspector fornirà un URL per accedere agli strumenti di debug nel tuo browser.
+
+### Monitoraggio MCP con Inspector
+
+Per monitorare e analizzare i server MCP in tempo reale, puoi utilizzare l'MCP Inspector direttamente tramite npx:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+Questo comando avvia una web app locale che permette di:
+- Ispezionare tutti i server MCP configurati
+- Monitorare le comunicazioni in tempo reale
+- Testare tool e resource dei server
+- Visualizzare la struttura dei dati scambiati
+- Debug delle configurazioni
+
+L'Inspector è particolarmente utile durante lo sviluppo per verificare che i server MCP siano configurati correttamente e per testare le loro funzionalità.
 
 ### Source Maps
 
