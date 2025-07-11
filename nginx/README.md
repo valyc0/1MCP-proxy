@@ -4,18 +4,31 @@ Questo setup configura un proxy NGINX opzionale con HTTPS e autenticazione Beare
 
 **⚠️ NOTA**: L'uso di NGINX è **opzionale**. Il servizio 1MCP Age## Personalizzazione NGINX
 
-### Cambiare il Bearer Token
-Modifica la riga in `nginx.conf`:
-```nginx
-if ($http_authorization !~ "^Bearer IL-TUO-TOKEN-QUI$") {
+### Personalizzazione NGINX
+
+### Configurazione tramite parametri dello script
+```bash
+# Token personalizzato con porte predefinite
+./start-nginx-proxy.sh "your-secret-token-2025"
+
+# Token e porte personalizzate
+./start-nginx-proxy.sh "your-token" 9080 9443
+
+# Solo porte personalizzate (token predefinito)
+./start-nginx-proxy.sh "mcp-token-secret-2025" 9080 9443
 ```
 
-### Cambiare le porte
-Modifica le porte nel comando docker in `start-nginx-proxy.sh`:
-```bash
--p 8080:80 \
--p 8081:4080 \
--p 8443:4443 \
+### Cambiare manualmente il Bearer Token nel template
+Modifica la riga in `nginx.conf.template`:
+```nginx
+if ($http_authorization !~ "^Bearer YOUR-TOKEN-HERE$") {
+```
+
+### Cambiare manualmente le porte nel template
+Modifica le righe in `nginx.conf.template`:
+```nginx
+listen YOUR_HTTP_PORT;
+listen YOUR_HTTPS_PORT ssl;
 ```
 
 ## Troubleshooting
@@ -122,8 +135,21 @@ npm start
 2. **Avviare NGINX Proxy**
 ```bash
 cd /workspace/db-ready/1MCP-proxy/nginx
+
+# Avvio con configurazione predefinita
 ./start-nginx-proxy.sh
+
+# Avvio con Bearer token personalizzato
+./start-nginx-proxy.sh "my-custom-token-2025"
+
+# Avvio con token e porte personalizzate
+./start-nginx-proxy.sh "my-token" 8080 8443
 ```
+
+**Parametri dello script:**
+- `BEARER_TOKEN`: Token di autenticazione (default: `mcp-token-secret-2025`)
+- `HTTP_PORT`: Porta HTTP per MCP (default: `4080`)
+- `HTTPS_PORT`: Porta HTTPS per MCP (default: `4443`)
 
 3. **Configurare VS Code** (scegli una delle opzioni)
 
@@ -305,9 +331,12 @@ rm -rf ssl/
 
 ## File del progetto
 
+### File del progetto
+
 ### File NGINX (opzionali)
-- `nginx.conf` - Configurazione NGINX
-- `start-nginx-proxy.sh` - Script di avvio
+- `nginx.conf.template` - Template di configurazione NGINX
+- `nginx.conf` - Configurazione NGINX generata (non modificare manualmente)
+- `start-nginx-proxy.sh` - Script di avvio con parametri personalizzabili
 - `stop-nginx-proxy.sh` - Script di stop
 - `ssl/nginx.crt` - Certificato SSL (generato automaticamente)
 - `ssl/nginx.key` - Chiave privata SSL (generata automaticamente)
