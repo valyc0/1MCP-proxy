@@ -6,6 +6,7 @@ Questo documento fornisce istruzioni dettagliate su come compilare e avviare l'a
 
 - [Script Disponibili](#script-disponibili)
 - [Struttura delle Directory](#struttura-delle-directory)
+- [Proxy NGINX Opzionale](#proxy-nginx-opzionale)
 - [Istruzioni di Utilizzo](#istruzioni-di-utilizzo)
 - [File di Configurazione](#file-di-configurazione)
 - [Risoluzione dei Problemi](#risoluzione-dei-problemi)
@@ -30,6 +31,12 @@ Questa directory contiene sei script principali:
 ```
 1MCP-proxy/
 ├── agent/                  # Repository clonato con codice compilato
+├── nginx/                  # Configurazione proxy NGINX opzionale
+│   ├── nginx.conf          # Configurazione NGINX
+│   ├── start-nginx-proxy.sh # Script di avvio proxy
+│   ├── stop-nginx-proxy.sh  # Script di stop proxy
+│   ├── ssl/                # Certificati SSL (generati automaticamente)
+│   └── README.md           # Documentazione dettagliata NGINX
 ├── docker-script/          # Script per Docker build e run
 │   ├── build.sh            # Script wrapper per buildare e avviare container Docker
 │   ├── build-image.sh      # Script per buildare solo l'immagine Docker
@@ -40,6 +47,96 @@ Questa directory contiene sei script principali:
 ├── start-sse.sh            # Script per avvio in modalità SSE
 └── README.md               # Questo file
 ```
+
+## Proxy NGINX Opzionale
+
+Il servizio 1MCP Agent può essere utilizzato direttamente o tramite un proxy NGINX opzionale che fornisce:
+
+- **HTTPS** con certificati SSL self-signed
+- **Autenticazione** Bearer Token
+- **Logging** centralizzato
+- **Security headers**
+
+### Modalità di Connessione
+
+#### 🔹 Connessione Diretta (Raccomandata per sviluppo)
+
+```json
+{
+  "mcpServers": {
+    "1mcp-agent": {
+      "url": "http://localhost:3051/sse"
+    }
+  }
+}
+```
+
+#### 🔹 Tramite Proxy NGINX HTTP (Con autenticazione)
+
+```json
+{
+  "mcpServers": {
+    "1mcp-agent": {
+      "url": "http://localhost:4080/sse",
+      "headers": {
+        "Authorization": "Bearer mcp-token-secret-2025"
+      }
+    }
+  }
+}
+```
+
+#### 🔹 Tramite Proxy NGINX HTTPS (Massima sicurezza)
+
+```json
+{
+  "mcpServers": {
+    "1mcp-agent": {
+      "url": "https://localhost:4443/sse",
+      "headers": {
+        "Authorization": "Bearer mcp-token-secret-2025"
+      },
+      "rejectUnauthorized": false
+    }
+  }
+}
+```
+
+### Avvio del Proxy NGINX
+
+```bash
+# 1. Avvia il servizio 1MCP Agent
+./start-sse.sh
+
+# 2. In un altro terminale, avvia il proxy NGINX (opzionale)
+cd nginx
+./start-nginx-proxy.sh
+
+# 3. Ferma il proxy quando non serve più
+./stop-nginx-proxy.sh
+```
+
+### Porte Utilizzate
+
+- **3051**: Servizio 1MCP Agent (backend principale)
+- **4080**: HTTP con Bearer Token (tramite NGINX)
+- **4443**: HTTPS con Bearer Token (tramite NGINX)
+
+### Quando Usare il Proxy NGINX
+
+**✅ Usa il proxy NGINX quando:**
+- Hai bisogno di autenticazione Bearer Token
+- Vuoi HTTPS per sicurezza
+- Devi esporre il servizio pubblicamente
+- Hai bisogno di logging avanzato
+
+**✅ Usa la connessione diretta quando:**
+- Stai sviluppando localmente
+- Vuoi semplicità di configurazione
+- Stai facendo debug o test
+- Non hai requisiti di sicurezza particolari
+
+> 📋 **Documentazione completa**: Vedi `nginx/README.md` per istruzioni dettagliate su configurazione, troubleshooting e personalizzazione del proxy NGINX.
 
 ## Istruzioni di Utilizzo
 
@@ -154,10 +251,35 @@ Esempio di configurazione base:
 
 Se riscontri problemi:
 
+### Problemi Generali
 1. Verifica che Node.js sia installato correttamente
 2. Assicurati che il file di configurazione `1mcp-config.json` esista e sia formattato correttamente
 3. Controlla i permessi di esecuzione degli script (usa `chmod +x *.sh` se necessario)
 4. Verifica i log di errore generati durante l'esecuzione
+
+### Problemi di Connessione
+- **Errore 502 Bad Gateway**: Il servizio 1MCP Agent non è avviato su localhost:3051
+- **Errore SSL/TLS**: Se usi HTTPS, aggiungi `"rejectUnauthorized": false` alla configurazione
+- **Errore 401 Unauthorized**: Bearer token mancante o errato quando usi il proxy NGINX
+- **Porta occupata**: Cambia porta con `--port` o verifica che non ci siano altri servizi in ascolto
+
+### Debug con Proxy NGINX
+Se stai usando il proxy NGINX e hai problemi:
+```bash
+# Verifica lo stato del proxy
+docker ps | grep nginx-mcp-proxy
+
+# Controlla i logs del proxy
+docker logs -f nginx-mcp-proxy
+
+# Testa direttamente il servizio backend
+curl http://localhost:3051/health
+
+# Testa il proxy senza autenticazione
+curl http://localhost:4080/health
+```
+
+> 📋 Per problemi specifici del proxy NGINX, consulta `nginx/README.md`
 
 ## Risorse Aggiuntive
 
@@ -228,17 +350,42 @@ npx -y @1mcp/agent --auth
 npx -y @1mcp/agent --tags "filesystem,memory"
 ```
 
-Una volta avviato in modalità SSE, puoi configurare i tuoi client (come VS Code) per connettersi al server 1MCP Agent. Ad esempio, nel file `settings.json` di VS Code:
+Una volta avviato in modalità SSE, puoi configurare i tuoi client (come VS Code) per connettersi al server 1MCP Agent. 
+
+#### Configurazione VS Code - Connessione Diretta
+
+Nel file `settings.json` o `mcp_settings.json` di VS Code:
 
 ```json
-"mcp": {
-  "servers": {
-    "1mcp-agent": {
-      "url": "http://localhost:3050/sse"
+{
+  "mcp": {
+    "servers": {
+      "1mcp-agent": {
+        "url": "http://localhost:3050/sse"
+      }
     }
   }
 }
 ```
+
+#### Configurazione VS Code - Tramite Proxy NGINX
+
+Se hai configurato il proxy NGINX (vedi sezione [Proxy NGINX Opzionale](#proxy-nginx-opzionale)):
+
+```json
+{
+  "mcpServers": {
+    "1mcp-agent": {
+      "url": "http://localhost:4080/sse",
+      "headers": {
+        "Authorization": "Bearer mcp-token-secret-2025"
+      }
+    }
+  }
+}
+```
+
+> 💡 **Nota**: La porta predefinita è 3050, ma negli esempi di questo progetto viene spesso usata la porta 3051. Assicurati di usare la porta corretta specificata quando avvii il servizio.
 
 ### Avvio in Modalità stdio
 
