@@ -2,6 +2,21 @@
 
 Questo documento fornisce istruzioni dettagliate su come compilare e avviare l'agente 1MCP utilizzando gli script forniti.
 
+## ⚠️ ATTENZIONE - AGENTE MODIFICATO
+
+**IMPORTANTE**: Questo progetto utilizza una versione modificata dell'agente 1MCP. 
+
+- ✅ **USA**: L'agente modificato fornito nel file `agent.tar.gz`
+- ❌ **NON USARE**: Il repository GitHub originale `https://github.com/1mcp-app/agent.git`
+
+Prima di iniziare qualsiasi operazione, estrai l'agente modificato:
+
+```bash
+tar -xzf agent.tar.gz
+```
+
+La versione modificata include personalizzazioni specifiche necessarie per il funzionamento con questo setup.
+
 ## Indice
 
 - [Script Disponibili](#script-disponibili)
@@ -19,18 +34,21 @@ Questo documento fornisce istruzioni dettagliate su come compilare e avviare l'a
 
 Questa directory contiene sei script principali:
 
-1. `compile.sh` - Script per clonare il repository e compilare il codice
+1. `compile.sh` - Script per estrarre e compilare l'agente modificato incluso nel progetto
 2. `start-stdio.sh` - Script per avviare l'agente in modalità stdio
 3. `start-sse.sh` - Script per avviare l'agente in modalità SSE (Server-Sent Events)
 4. `docker-script/build.sh` - Script wrapper che builda e avvia l'agente come container Docker
 5. `docker-script/build-image.sh` - Script per buildare l'immagine Docker dell'agente
 6. `docker-script/run-container.sh` - Script per avviare l'agente come container Docker
 
+⚠️ **IMPORTANTE**: Prima di utilizzare qualsiasi script, assicurati di aver estratto l'agente modificato eseguendo `tar -xzf agent.tar.gz`
+
 ## Struttura delle Directory
 
 ```
 1MCP-proxy/
-├── agent/                  # Repository clonato con codice compilato
+├── agent.tar.gz            # Agente 1MCP modificato (da estrarre prima dell'uso)
+├── agent/                  # Directory dell'agente estratto e compilato
 ├── nginx/                  # Configurazione proxy NGINX opzionale
 │   ├── nginx.conf          # Configurazione NGINX
 │   ├── start-nginx-proxy.sh # Script di avvio proxy
@@ -42,11 +60,13 @@ Questa directory contiene sei script principali:
 │   ├── build-image.sh      # Script per buildare solo l'immagine Docker
 │   └── run-container.sh    # Script per avviare solo il container Docker
 ├── 1mcp-config.json        # File di configurazione dell'agente
-├── compile.sh              # Script di compilazione
+├── compile.sh              # Script di compilazione (estrae e compila l'agente)
 ├── start-stdio.sh          # Script per avvio in modalità stdio
 ├── start-sse.sh            # Script per avvio in modalità SSE
 └── README.md               # Questo file
 ```
+
+⚠️ **Nota**: L'agente è fornito come file `agent.tar.gz` e deve essere estratto prima dell'uso. Non eliminare questo file poiché contiene la versione modificata necessaria per il progetto.
 
 ## Proxy NGINX Opzionale
 
@@ -140,18 +160,31 @@ cd nginx
 
 ## Istruzioni di Utilizzo
 
-### 1. Compilazione
+### 1. Preparazione e Compilazione
 
-Per clonare il repository e compilare il codice:
+⚠️ **IMPORTANTE**: L'agente 1MCP in questo progetto è stato modificato e personalizzato. **NON utilizzare** il repository GitHub originale.
+
+**Prima di iniziare, estrai l'agente modificato incluso nel progetto:**
+
+```bash
+# Estrai l'agente modificato dal file tar.gz incluso nel progetto
+tar -xzf agent.tar.gz
+```
+
+**Poi compila il codice:**
 
 ```bash
 ./compile.sh
 ```
 
-Questo script:
-- Clona il repository 1MCP Agent da `https://github.com/1mcp-app/agent.git` (o lo aggiorna se già esistente)
+⚠️ **Nota**: Lo script `compile.sh` è stato aggiornato per utilizzare l'agente modificato estratto localmente invece di clonare dal repository GitHub.
+
+Questo script ora:
+- Utilizza la versione modificata dell'agente estratta dal file `agent.tar.gz`
 - Installa tutte le dipendenze necessarie
-- Compila il codice sorgente
+- Compila il codice sorgente personalizzato
+
+> **Non clonare mai dal repository GitHub** (`https://github.com/1mcp-app/agent.git`) poiché sovrascriverà le modifiche personalizzate necessarie per questo progetto.
 
 ### 2. Avvio in Modalità stdio
 
